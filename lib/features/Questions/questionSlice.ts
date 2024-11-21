@@ -3,6 +3,7 @@ import { Key } from "react";
 
 import { QuestionT } from "@/types/QuestionType";
 import { FormT } from "@/types/FormType";
+import {WritableDraft} from 'immer';
 
 const questions:QuestionT[] = []
 
@@ -20,31 +21,28 @@ export const questionSlice = createSlice({
             
             const ques:QuestionT =  {
                 id:nanoid(),
-                questionText:action.payload.questionText,
+                questionText:`Question ${state.questions.length+1}`,
                 textAnswer:"",
                 answerType:"Text",
                 dateAnswer: "",
                 dropDownAnswer:["Option 1"],
                 checkBoxAnswer: ["Option 1"],
                 linearScaleAnswer: ["1","5"],
-                formId: localStorage.getItem('currForm'),
+                formId: localStorage.getItem('currentForm'),
                 req:false,
                 userId: localStorage.getItem("auth")
             }
             state.questions.push(ques)
+            
+            //Update Local storage
+            const userEmail = localStorage.getItem('auth')
+            const currentForm = localStorage.getItem('currentForm')||""
+            const userForms = JSON.parse(localStorage.getItem(`forms_${userEmail}`)||"[]")
+            console.log("Printing from addquestion: ",userForms)
+            // userForms[currentForm].questions.push(ques)
+            userForms[currentForm].questions[String(ques.id)]=ques
+            localStorage.setItem(`forms_${userEmail}`,JSON.stringify(userForms))
 
-            // Update localStorage
-            const userId = localStorage.getItem("auth");
-            const formId = localStorage.getItem('currForm');
-            const userForms = JSON.parse(localStorage.getItem(`forms_${userId}`) || '{}');
-            const formIndex = userForms.forms.findIndex((f: FormT) => f.id === formId);
-            if (formIndex !== -1) {
-                if (!userForms.forms[formIndex].questions) {
-                    userForms.forms[formIndex].questions = [];
-                }
-                userForms.forms[formIndex].questions.push(ques);
-                localStorage.setItem(`forms_${userId}`, JSON.stringify(userForms));
-            }
         },
         updateQuesText: (state,action) =>{
             state.questions.map((ques)=> {
@@ -66,6 +64,7 @@ export const questionSlice = createSlice({
                 }
                 return ques
             })
+
         },
         updateQuestionText: (state, action) => {
             state.questions.map((ques)=> {
@@ -161,13 +160,19 @@ export const questionSlice = createSlice({
             state.questions = state.questions.filter((ques)=>(ques.id!==action.payload.id))
         },
         loadFormQuestions: (state, action) => {
-            const userId = localStorage.getItem("auth");
-            const formId = action.payload.formId;
-            
-            const userForms = JSON.parse(localStorage.getItem(`forms_${userId}`) || '{}');
-            const form = userForms.forms?.find((f: FormT) => f.id === formId);
-            state.questions = form?.questions || [];
-        }
+            const currentForm = localStorage.getItem("currentForm") || ""
+            const userEmail = localStorage.getItem('auth') || "";
+            const FormsObject = JSON.parse(localStorage.getItem(`forms_${userEmail}`)||"{}")
+
+            if(Object.keys(FormsObject).length!==0){
+                // console.log(FormsObject)
+                if(Object.keys(FormsObject).length!==0){
+                    state.questions = [...Object.values(FormsObject[currentForm].questions)] 
+                }
+            }
+
+        },
+
     }
 })
 
@@ -186,7 +191,7 @@ export const {
     updateLinearScale,
     toggleRequired,
     deleteQues,
-    loadFormQuestions
+    loadFormQuestions,
 } = questionSlice.actions
 
 export default questionSlice.reducer

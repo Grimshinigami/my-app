@@ -22,9 +22,8 @@ import {
   removeQuesCheckBoxVal,
   updateLinearScale,
   toggleRequired,
-  deleteQues
+  deleteQues,
 } from '@/lib/features/Questions/questionSlice';
-import { text } from 'stream/consumers';
 
 function Form_question({chId}:{chId:Key}) {
 
@@ -37,6 +36,36 @@ function Form_question({chId}:{chId:Key}) {
     const [dateVal, setDateVal] = useState<string> ('')
     const [dropDownVals, setDropDownVals] = useState<string[]>(["Option 1"])
     const [checkBoxVals, setCheckBoxVals] = useState<string[]>(["Option 1"])
+
+    const Questions = useSelector((state:any)=>state.questions.questions)
+    // console.log(Questions)
+    const currentQuestion:QuestionT[] = Questions.filter((ques:QuestionT)=>String(ques.id)==String(chId))
+    // console.log(currentQuestion)
+    // console.log(currentQuestion[0].answerType)
+
+    useEffect(() => {
+      setQuestionText(currentQuestion[0].questionText)  
+      setLabelType(currentQuestion[0].answerType)
+      if(currentQuestion[0].answerType==='Text'){
+        setTextVal(currentQuestion[0].textAnswer)
+      } 
+      else if(currentQuestion[0].answerType==='Date'){
+        setDateVal(currentQuestion[0].dateAnswer)
+      }
+      else if(currentQuestion[0].answerType==='Dropdown'){
+        setDropDownVals(currentQuestion[0].dropDownAnswer)
+      }
+      else if(currentQuestion[0].answerType==='Checkbox'){
+        setCheckBoxVals(currentQuestion[0].checkBoxAnswer)
+      }
+      else if(currentQuestion[0].answerType==='LinearScale'){
+        setMinLinearType(currentQuestion[0].linearScaleAnswer[0])
+        setMaxLinearType(currentQuestion[0].linearScaleAnswer[1])
+      }
+    }, [])
+    
+
+    
 
     const handleChange = (event: SelectChangeEvent) => {
         dispatch(updateAnswerType({id:chId,answerType:event.target.value}))
@@ -149,6 +178,7 @@ function Form_question({chId}:{chId:Key}) {
             onChange={(e)=> handleTextChange(e.target.value)}
             multiline
             className=' w-full'
+            disabled
           />
           }
 
@@ -158,6 +188,7 @@ function Form_question({chId}:{chId:Key}) {
           type="date" 
           value={dateVal}
           onChange={(e)=>handleDateChange(e.target.value)}
+          disabled
           />
           }
 

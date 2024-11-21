@@ -1,25 +1,27 @@
 "use client"
 import Link from "next/link"
-import { addForm } from "@/lib/features/FormDetails/formSlice"
+import { addForm, deleteForm } from "@/lib/features/FormDetails/formSlice"
 import { useDispatch } from "react-redux"
-import { useEffect, useState } from "react";
+import { Key, useEffect, useState } from "react";
 import { FormT } from "@/types/FormType";
 import { redirect } from "next/navigation";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 function New_form() {
 
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const [currentForms, setCurrentForms] = useState<FormT[]>([]);
+  const [key, setKey] = useState<number>(0)
 
   useEffect(() => {
-    const user = localStorage.getItem('auth');
+    const userEmail = localStorage.getItem('auth');
 
-    const temp = localStorage.getItem(`forms_${user}`);
+    const userForms:FormT[] = JSON.parse(localStorage.getItem(`forms_${userEmail}`)||"[]")
 
-    if(temp){
-      setCurrentForms(JSON.parse(temp).forms);
+    if(userForms){
+      setCurrentForms([...Object.values(userForms)])
     }
 
   }, [])
@@ -29,10 +31,34 @@ function New_form() {
     console.log(currentForms);
   },[currentForms])
 
+  useEffect(()=>{
+    const userEmail = localStorage.getItem('auth');
 
-  function handleRedirect(form:FormT){
-    localStorage.setItem('currFormObject',JSON.stringify({form}));
-    redirect(`/submitform`);
+    const userForms:FormT[] = JSON.parse(localStorage.getItem(`forms_${userEmail}`)||"[]")
+
+    if(userForms){
+      setCurrentForms([...Object.values(userForms)])
+    }
+  },[key])
+
+
+  function handleViewRedirect(formId:Key){
+    const userEmail = localStorage.getItem('auth')
+    localStorage.setItem('currentForm',String(formId))
+    router.push('/submitform')
+    // redirect(`/submitform`);
+  }
+
+  function handleEditRedirect(formId:Key){
+    const userEmail = localStorage.getItem('auth')
+    localStorage.setItem('currentForm',String(formId))
+    router.push('/createform')
+    // redirect('/createform')
+  }
+
+  function handleDeleteForm(formId:Key){
+    dispatch(deleteForm({formId:String(formId)}))
+    setKey(key=>key+1)
   }
 
   return (
@@ -61,9 +87,9 @@ function New_form() {
                 <p>{form.formTitle}</p>
                 <p>{form.desc}</p>
                 <div className=" flex flex-row gap-2">
-                  <button>Edit</button>
-                  <button onClick={()=>handleRedirect(form)}>View</button>
-                  <button>Delete</button>
+                  <button onClick={()=>handleEditRedirect(form.id)}>Edit</button>
+                  <button onClick={()=>handleViewRedirect(form.id)}>Fill Form</button>
+                  <button onClick={()=> handleDeleteForm(form.id)}>Delete</button>
                 </div>
               </div>
             </div>

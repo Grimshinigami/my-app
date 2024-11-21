@@ -5,6 +5,6 @@ export interface FormT{
     id:Key,
     formTitle:string,
     desc:string,
-    questions: QuestionT[],
+    questions: {},
     userId:string|null
 }
